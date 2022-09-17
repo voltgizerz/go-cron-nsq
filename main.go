@@ -25,7 +25,8 @@ func main() {
 	go func() {
 		defer wg.Done()
 
-		config.InitCRON()
+		cron := config.NewCRON()
+		cron.Start()
 	}()
 
 	go func() {

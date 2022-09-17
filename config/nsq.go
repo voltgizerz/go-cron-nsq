@@ -1,15 +1,19 @@
 package config
 
 import (
+	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
 
+	"github.com/jaswdr/faker"
 	"github.com/nsqio/go-nsq"
 )
 
 func message() []byte {
-	messageBody := []byte("hello")
+	faker := faker.New()
+
+	messageBody := []byte(fmt.Sprintf("Hi %s, This Message from Producer!", faker.Person().Name()))
 	return messageBody
 }
 
@@ -30,6 +34,8 @@ func Producer() {
 		logger.Error(err)
 	}
 
+	logger.Println("Successfully Published Message...")
+
 	// Gracefully stop the producer when appropriate (e.g. before shutting down the service)
 	producer.Stop()
 }
@@ -38,6 +44,8 @@ type myMessageHandler struct{}
 
 // HandleMessage implements the Handler interface.
 func (h *myMessageHandler) HandleMessage(m *nsq.Message) error {
+	logger.Println("Got a new message...")
+
 	var err error
 	if len(m.Body) == 0 {
 		// Returning nil will automatically send a FIN command to NSQ to mark the message as processed.
