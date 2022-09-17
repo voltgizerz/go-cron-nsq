@@ -11,8 +11,7 @@ require (
 
 require (
 	github.com/golang/snappy v0.0.1 // indirect
-	github.com/goombaio/namegenerator v0.0.0-20181006234301-989e774b106e // indirect
 	github.com/jaswdr/faker v1.15.0
-	github.com/nsqio/go-nsq v1.1.0 // indirect
+	github.com/nsqio/go-nsq v1.1.0
 	golang.org/x/sys v0.0.0-20220715151400-c0bba94af5f8 // indirect
 )
