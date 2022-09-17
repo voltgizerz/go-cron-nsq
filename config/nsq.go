@@ -14,13 +14,11 @@ func message() []byte {
 }
 
 func Producer() {
-	log := SetupLog()
-
 	// Instantiate a producer.
 	config := nsq.NewConfig()
 	producer, err := nsq.NewProducer(os.Getenv("NSQ_ADDRESS_PRODUCER"), config)
 	if err != nil {
-		log.Error(err)
+		logger.Error(err)
 	}
 
 	topicName := "topic"
@@ -29,7 +27,7 @@ func Producer() {
 	// Messages can also be sent asynchronously and/or in batches.
 	err = producer.Publish(topicName, message())
 	if err != nil {
-		log.Error(err)
+		logger.Error(err)
 	}
 
 	// Gracefully stop the producer when appropriate (e.g. before shutting down the service)
@@ -40,8 +38,6 @@ type myMessageHandler struct{}
 
 // HandleMessage implements the Handler interface.
 func (h *myMessageHandler) HandleMessage(m *nsq.Message) error {
-	log := SetupLog()
-
 	var err error
 	if len(m.Body) == 0 {
 		// Returning nil will automatically send a FIN command to NSQ to mark the message as processed.
@@ -50,20 +46,18 @@ func (h *myMessageHandler) HandleMessage(m *nsq.Message) error {
 	}
 
 	// do whatever actual message processing is desired
-	log.Println(m.Body)
+	logger.Println(m.Body)
 
 	// Returning a non-nil error will automatically send a REQ command to NSQ to re-queue the message.
 	return err
 }
 
 func Consumer() {
-	log := SetupLog()
-
 	// Instantiate a consumer that will subscribe to the provided channel.
 	config := nsq.NewConfig()
 	consumer, err := nsq.NewConsumer("topic", "channel", config)
 	if err != nil {
-		log.Error(err)
+		logger.Error(err)
 	}
 
 	// Set the Handler for messages received by this Consumer. Can be called multiple times.
@@ -74,7 +68,7 @@ func Consumer() {
 	// See also ConnectToNSQD, ConnectToNSQDs, ConnectToNSQLookupds.
 	err = consumer.ConnectToNSQLookupd(os.Getenv("NSQ_ADDRESS_CONSUMER"))
 	if err != nil {
-		log.Error(err)
+		logger.Error(err)
 	}
 
 	// wait for signal to exit

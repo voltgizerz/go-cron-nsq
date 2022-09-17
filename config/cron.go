@@ -2,8 +2,8 @@ package config
 
 import (
 	"os"
-	"time"
 
+	"github.com/jaswdr/faker"
 	"github.com/robfig/cron/v3"
 )
 
@@ -11,13 +11,10 @@ func InitCRON() {
 	cron := cron.New()
 	cron.AddFunc(os.Getenv("CRON_RULE"), job)
 	cron.Start()
-
-	time.Sleep(time.Minute * 5)
 }
 
 func job() {
-	log := SetupLog()
+	faker := faker.New()
 
-	yourName := "Felix"
-	log.Println("Hi Every second! " + yourName)
+	logger.Printf("Hi %s, This Message from CRON!", faker.Person().Name())
 }

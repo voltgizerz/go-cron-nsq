@@ -5,6 +5,8 @@ import (
 	logrus "github.com/sirupsen/logrus"
 )
 
+var logger = SetupLog()
+
 // SetupLog - return logrus.
 func SetupLog() *logrus.Logger {
 	log := logrus.New()
