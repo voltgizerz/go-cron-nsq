@@ -22,23 +22,20 @@ func main() {
 	var wg sync.WaitGroup
 	wg.Add(maxWorker)
 
+	producer := config.NewProducer(os.Getenv("NSQ_ADDRESS_PRODUCER"), "topic")
+	
 	go func() {
 		defer wg.Done()
 
-		cron := config.NewCRON()
+		config.NewConsumer(os.Getenv("NSQ_ADDRESS_CONSUMER"), "channel", "topic")
+	}()
+
+	go func() {
+		defer wg.Done()
+
+		cron := config.NewCRON(producer)
+		cron.Cron.AddFunc(os.Getenv("CRON_RULE"), cron.JOB)
 		cron.Start()
-	}()
-
-	go func() {
-		defer wg.Done()
-
-		config.Consumer()
-	}()
-
-	go func() {
-		defer wg.Done()
-
-		config.Producer()
 	}()
 
 	go func() {

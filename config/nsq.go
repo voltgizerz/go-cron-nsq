@@ -1,6 +1,7 @@
 package config
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"os/signal"
@@ -10,42 +11,70 @@ import (
 	"github.com/nsqio/go-nsq"
 )
 
-func message() []byte {
+type Message struct {
+	Name    string
+	Message string
+}
+
+func createMessage() []byte {
 	faker := faker.New()
 
-	messageBody := []byte(fmt.Sprintf("Hi %s, This Message from Producer!", faker.Person().Name()))
+	name := faker.Person().Name()
+	message := Message{
+		Name:    name,
+		Message: fmt.Sprintf("Hi %s, This Message from Producer!", name),
+	}
+
+	messageBody, err := json.Marshal(message)
+	if err != nil {
+		logger.Error("Error when marshal message body!")
+	}
+
 	return messageBody
 }
 
-func Producer() {
+type Producer struct {
+	Client *nsq.Producer
+}
+
+func NewProducer(addr, topicName string) *Producer {
 	// Instantiate a producer.
 	config := nsq.NewConfig()
-	producer, err := nsq.NewProducer(os.Getenv("NSQ_ADDRESS_PRODUCER"), config)
+	producer, err := nsq.NewProducer(addr, config)
 	if err != nil {
 		logger.Error(err)
 	}
-
-	topicName := "topic"
 
 	// Synchronously publish a single message to the specified topic.
 	// Messages can also be sent asynchronously and/or in batches.
-	err = producer.Publish(topicName, message())
+	for i := 0; i < 10; i++ {
+		err = producer.Publish(topicName, createMessage())
+		if err != nil {
+			logger.Error(err)
+		}
+		logger.Printf(" [X] Successfully Published Message %d...", i+1)
+	}
+
+	return &Producer{
+		Client: producer,
+	}
+}
+
+func (p *Producer) Publish(topicName string) {
+	err := p.Client.Publish(topicName, createMessage())
 	if err != nil {
 		logger.Error(err)
 	}
-
-	logger.Println("Successfully Published Message...")
-
-	// Gracefully stop the producer when appropriate (e.g. before shutting down the service)
-	producer.Stop()
+	logger.Printf(" [X] Successfully Published Message From CRON...")
 }
 
-type myMessageHandler struct{}
+func (p *Producer) Stop() {
+	// Gracefully stop the producer when appropriate (e.g. before shutting down the service)
+	p.Client.Stop()
+}
 
 // HandleMessage implements the Handler interface.
-func (h *myMessageHandler) HandleMessage(m *nsq.Message) error {
-	logger.Println("Got a new message...")
-
+func (h *Message) HandleMessage(m *nsq.Message) error {
 	var err error
 	if len(m.Body) == 0 {
 		// Returning nil will automatically send a FIN command to NSQ to mark the message as processed.
@@ -54,27 +83,31 @@ func (h *myMessageHandler) HandleMessage(m *nsq.Message) error {
 	}
 
 	// do whatever actual message processing is desired
-	logger.Println(m.Body)
+	logger.Printf(" [X] Received message : %s", m.Body)
 
 	// Returning a non-nil error will automatically send a REQ command to NSQ to re-queue the message.
 	return err
 }
 
-func Consumer() {
+type Consumer struct {
+	Client *nsq.Consumer
+}
+
+func NewConsumer(addr, channel, topicName string) *Consumer {
 	// Instantiate a consumer that will subscribe to the provided channel.
 	config := nsq.NewConfig()
-	consumer, err := nsq.NewConsumer("topic", "channel", config)
+	consumer, err := nsq.NewConsumer(topicName, channel, config)
 	if err != nil {
 		logger.Error(err)
 	}
 
 	// Set the Handler for messages received by this Consumer. Can be called multiple times.
 	// See also AddConcurrentHandlers.
-	consumer.AddHandler(&myMessageHandler{})
+	consumer.AddHandler(&Message{})
 
 	// Use nsqlookupd to discover nsqd instances.
 	// See also ConnectToNSQD, ConnectToNSQDs, ConnectToNSQLookupds.
-	err = consumer.ConnectToNSQLookupd(os.Getenv("NSQ_ADDRESS_CONSUMER"))
+	err = consumer.ConnectToNSQLookupd(addr)
 	if err != nil {
 		logger.Error(err)
 	}
@@ -84,6 +117,14 @@ func Consumer() {
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 	<-sigChan
 
+	defer consumer.Stop()
+
+	return &Consumer{
+		Client: consumer,
+	}
+}
+
+func (c *Consumer) Stop() {
 	// Gracefully stop the consumer.
-	consumer.Stop()
+	c.Client.Stop()
 }
