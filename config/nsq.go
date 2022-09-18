@@ -51,8 +51,9 @@ func NewProducer(addr, topicName string) *Producer {
 		err = producer.Publish(topicName, createMessage())
 		if err != nil {
 			logger.Error(err)
+		} else {
+			logger.Printf(" [X] Successfully Published Message %d...", i+1)
 		}
-		logger.Printf(" [X] Successfully Published Message %d...", i+1)
 	}
 
 	return &Producer{
@@ -64,6 +65,7 @@ func (p *Producer) Publish(topicName string) {
 	err := p.Client.Publish(topicName, createMessage())
 	if err != nil {
 		logger.Error(err)
+		return
 	}
 	logger.Printf(" [X] Successfully Published Message From CRON...")
 }
