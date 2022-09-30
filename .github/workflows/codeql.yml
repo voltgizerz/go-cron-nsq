@@ -14,13 +14,9 @@ name: "CodeQL"
 on:
   push:
     branches: [ "master" ]
-    paths-ignore:
-      -'Makefile'
   pull_request:
     # The branches below must be a subset of the branches above
     branches: [ "master" ]
-    paths-ignore:
-      -'Makefile'
   schedule:
     - cron: '28 10 * * 1'
   
@@ -57,6 +53,9 @@ jobs:
         # Details on CodeQL's query packs refer to : https://docs.github.com/en/code-security/code-scanning/automatically-scanning-your-code-for-vulnerabilities-and-errors/configuring-code-scanning#using-queries-in-ql-packs
         # queries: security-extended,security-and-quality
 
+    - name: Unlink makefile
+      run: |
+        rm -f Makefile
         
     # Autobuild attempts to build any compiled languages  (C/C++, C#, or Java).
     # If this step fails, then you should remove it and run the build manually (see below)
