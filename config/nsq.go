@@ -89,6 +89,7 @@ func (h *Message) HandleMessage(m *nsq.Message) error {
 	return err
 }
 
+// Consumer
 type Consumer struct {
 	Client *nsq.Consumer
 }
