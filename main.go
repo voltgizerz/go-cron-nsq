@@ -22,12 +22,13 @@ func main() {
 	var wg sync.WaitGroup
 	wg.Add(maxWorker)
 
-	producer := config.NewProducer(os.Getenv("NSQ_ADDRESS_PRODUCER"), "topic")
-	
+	producer := config.NewProducer(os.Getenv("NSQ_ADDRESS_PRODUCER"), "topic_name")
+
 	go func() {
 		defer wg.Done()
 
-		config.NewConsumer(os.Getenv("NSQ_ADDRESS_CONSUMER"), "channel", "topic")
+	config.NewConsumer(os.Getenv("NSQ_ADDRESS_CONSUMER"), "channel_name", "topic_name")
+	
 	}()
 
 	go func() {

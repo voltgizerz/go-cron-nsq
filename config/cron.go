@@ -1,7 +1,6 @@
 package config
 
 import (
-	"github.com/jaswdr/faker"
 	"github.com/robfig/cron/v3"
 )
 
@@ -28,8 +27,8 @@ func (c *Cron) Start() {
 }
 
 func (c *Cron) JOB() {
-	faker := faker.New()
+	// faker := faker.New()
 
-	logger.Printf("Hi %s, This Message from CRON!", faker.Person().Name())
+	// logger.Printf("Hi %s, This Message from CRON!", faker.Person().Name())
 	c.Producer.Publish("topic")
 }

@@ -79,13 +79,11 @@ func (p *Producer) Stop() {
 func (h *Message) HandleMessage(m *nsq.Message) error {
 	var err error
 	if len(m.Body) == 0 {
-		// Returning nil will automatically send a FIN command to NSQ to mark the message as processed.
-		// In this case, a message with an empty body is simply ignored/discarded.
 		return nil
 	}
 
 	// do whatever actual message processing is desired
-	logger.Printf(" [X] Received message : %s", m.Body)
+	logger.Printf(" [X] Received message : %s Retry attempt %d", m.Body, m.Attempts)
 
 	// Returning a non-nil error will automatically send a REQ command to NSQ to re-queue the message.
 	return err
