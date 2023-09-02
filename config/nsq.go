@@ -93,6 +93,7 @@ type Consumer struct {
 	Client *nsq.Consumer
 }
 
+// NewConsumer - function.
 func NewConsumer(addr, channel, topicName string) *Consumer {
 	// Instantiate a consumer that will subscribe to the provided channel.
 	config := nsq.NewConfig()
